@@ -1,15 +1,10 @@
 package com.tuesda.gouzi
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.DocumentsContract
-import android.provider.MediaStore
-import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 
 
 class PickVideoActivity : AppCompatActivity() {
@@ -27,8 +22,8 @@ class PickVideoActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK && requestCode == PICK_VIDEO_REQUEST_CODE && data != null) {
-            data.data.apply {
-                Log.i(TAG, "video uri $this path ${pathOfUri(this@PickVideoActivity, this)}")
+            data.data?.let { Util.videoInfoOfUri(this, it) }.also {
+                GLog.i(TAG, "picked video info: $it")
             }
         }
     }
@@ -36,22 +31,5 @@ class PickVideoActivity : AppCompatActivity() {
     companion object {
         const val TAG = "PickVideoActivity"
         const val PICK_VIDEO_REQUEST_CODE = 0
-
-        private fun pathOfUri(context: Context, uri: Uri): String? {
-            // https://stackoverflow.com/questions/13209494/how-to-get-the-full-file-path-from-uri
-            val splits = DocumentsContract.getDocumentId(uri).split(":")
-            val cursor = context.contentResolver.query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    arrayOf(MediaStore.Video.Media.DATA), "_id=?", arrayOf(splits[1]), null)
-            return cursor?.run {
-                val columnIndex = getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
-                val result = if (moveToFirst()) {
-                    getString(columnIndex)
-                } else {
-                    null
-                }
-                close()
-                result
-            }
-        }
     }
 }
